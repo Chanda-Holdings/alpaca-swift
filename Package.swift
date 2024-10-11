@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "AlpacaSwift",
+    name: "alpaca-swift",
     platforms: [
         .iOS("15.0"),
         .macOS("12.0"),
