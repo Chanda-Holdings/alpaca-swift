@@ -67,7 +67,7 @@ public struct NumericString<Value: StringRepresentable>: Codable, Hashable {
     
 }
 
-func downloadImage(url: URL) async -> UIImage? {
+public func downloadImage(url: URL) async -> UIImage? {
     do {
         let (data, _) = try await URLSession.shared.data(from: url)
         return UIImage(data: data)

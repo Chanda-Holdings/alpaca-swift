@@ -7,8 +7,7 @@
 
 import Foundation
 
-class Snapshot: Codable {
-    
+public class Snapshot: Codable {
     public let dailyBar: Bar
     public let latestQuote: Quote
     public let minuteBar: Bar
@@ -18,7 +17,7 @@ class Snapshot: Codable {
 
 extension AlpacaDataClient {
     
-    func snapshot(symbol: String, currency: String? = nil, feed: Quote.Feed? = nil) async throws -> Snapshot? {
+    public func snapshot(symbol: String, currency: String? = nil, feed: Quote.Feed? = nil) async throws -> Snapshot? {
         var feed = feed
         if feed == nil {
             feed = Quote.Feed(rawValue: UserDefaults.standard.string(forKey: "feed") ?? Quote.Feed.sip.rawValue)
@@ -47,7 +46,7 @@ extension AlpacaDataClient {
     }
     
     
-    func snapshot(asset: Asset, currency: String? = nil) async throws -> Snapshot? {
+    public func snapshot(asset: Asset, currency: String? = nil) async throws -> Snapshot? {
         return try await snapshot(symbol: asset.symbol, currency: currency)
     }
 }

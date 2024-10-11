@@ -31,7 +31,7 @@ public struct Quote: Codable {
         case desc = "desc"
     }
     
-    init(timestamp: Date, price: Double) {
+    public init(timestamp: Date, price: Double) {
         self.t = timestamp
         self.bx = ""
         self.bp = price

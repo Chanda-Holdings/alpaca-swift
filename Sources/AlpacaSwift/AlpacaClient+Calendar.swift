@@ -28,7 +28,7 @@ extension AlpacaClient {
 }
 
 
-extension String {
+public extension String {
     func timeIntervalFromString() -> TimeInterval {
         let components = self.split(separator: ":")
         guard components.count == 2,

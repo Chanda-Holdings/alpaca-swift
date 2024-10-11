@@ -14,7 +14,7 @@ public struct Environment: Hashable {
     public let secret: String
     public let access_token: String
     
-    var staticHashValue: String {
+   public var staticHashValue: String {
         let combined = "\(api)\(key)\(secret)\(access_token)"
         let digest = SHA256.hash(data: combined.data(using: .utf8) ?? Data())
         return digest.map { String(format: "%02hhx", $0) }.joined()

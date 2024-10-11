@@ -33,7 +33,7 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
             return self.rawValue.replacingOccurrences(of: "_", with: " ").capitalized
         }
         
-        static func fromString(string: String) -> Side? {
+        public static func fromString(string: String) -> Side? {
             return Side(rawValue: string.lowercased().replacingOccurrences(of: " ", with: "_"))
         }
     }
@@ -85,7 +85,7 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
             return self.rawValue.replacingOccurrences(of: "_", with: " ").capitalized
         }
         
-        static func fromString(string: String) -> Status? {
+        public static func fromString(string: String) -> Status? {
             return Status(rawValue: string.lowercased().replacingOccurrences(of: " ", with: "_"))
         }
         
@@ -106,7 +106,7 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
             return self.rawValue.replacingOccurrences(of: "_", with: " ").capitalized
         }
         
-        static func optionDisplay() -> [String] {
+        public static func optionDisplay() -> [String] {
             var disp: [String] = []
             for i in OrderType.allCases {
                 if i == trailingStop { continue }
@@ -115,7 +115,7 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
             return disp
         }
         
-        static func fromString(string: String) -> OrderType? {
+        public static func fromString(string: String) -> OrderType? {
             return OrderType(rawValue: string.lowercased().replacingOccurrences(of: " ", with: "_"))
         }
     }
@@ -132,11 +132,11 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
             return TimeInForce.nameDict()[self]!.replacingOccurrences(of: "_", with: " ").capitalized
         }
         
-        static func nameDict() -> [TimeInForce: String] {
+        public static func nameDict() -> [TimeInForce: String] {
             return [TimeInForce.day: "Day", TimeInForce.gtc: "Good Until Canceled", TimeInForce.opg: "Market/Limit On Open", TimeInForce.cls: "Market/Limit On Close", TimeInForce.ioc: "Immediate Or Cancel", TimeInForce.fok: "Fill Or Kill"]
         }
         
-        static func reverseDictionary() -> [String: TimeInForce] {
+        public static func reverseDictionary() -> [String: TimeInForce] {
             var reversedDictionary = [String: TimeInForce]()
             for (key, value) in TimeInForce.nameDict() {
                 reversedDictionary[value] = key
@@ -144,7 +144,7 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
             return reversedDictionary
         }
         
-        static func fromString(string: String) -> TimeInForce? {
+        public static func fromString(string: String) -> TimeInForce? {
             if let tif = reverseDictionary()[string] {
                 return tif
             }
@@ -289,7 +289,7 @@ extension AlpacaClient {
 }
 
 
-extension Double {
+public extension Double {
     func absoluteString() -> String {
         return NSDecimalNumber(decimal: Decimal(self)).stringValue
     }
