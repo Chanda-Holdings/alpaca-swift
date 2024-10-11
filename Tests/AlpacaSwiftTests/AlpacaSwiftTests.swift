@@ -1,5 +1,5 @@
 import XCTest
-@testable import Alpaca
+@testable import AlpacaSwift
 
 enum Environment: String {
     case alpacaApiKey = "ALPACA-API-KEY"
@@ -40,7 +40,7 @@ final class AlpacaTests: XCTestCase {
     }
 
     func testCalendarRequest() async throws {
-        let _: [Alpaca.Calendar] = try await client.calendar(start: Utils.iso8601DateOnlyFormatter.date(from: "2020-01-01"), end: Utils.iso8601DateOnlyFormatter.date(from: "2020-01-07"))
+        let _: [AlpacaSwift.Calendar] = try await client.calendar(start: Utils.iso8601DateOnlyFormatter.date(from: "2020-01-01"), end: Utils.iso8601DateOnlyFormatter.date(from: "2020-01-07"))
     }
 
     func testPortfolioHistoryRequest() async throws {

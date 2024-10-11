@@ -3,7 +3,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "Alpaca",
+    name: "AlpacaSwift",
     platforms: [
         .iOS("15.0"),
         .macOS("12.0"),
@@ -11,21 +11,21 @@ let package = Package(
         .watchOS("8.0")
     ],
     products: [
-        .library(name: "Alpaca", targets: ["Alpaca"])
+        .library(name: "AlpacaSwift", targets: ["AlpacaSwift"])
     ],
     dependencies: [
         .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", from: "5.0.2")
     ],
     targets: [
         .target(
-            name: "Alpaca",
+            name: "AlpacaSwift",
             dependencies: [
                 .product(name: "SwiftyJSON", package: "SwiftyJSON")
             ]
         ),
         .testTarget(
-            name: "AlpacaTests",
-            dependencies: ["Alpaca"]
+            name: "AlpacaSwiftTests",
+            dependencies: ["AlpacaSwift"]
         )
     ],
     swiftLanguageVersions: [.version("5.5")]

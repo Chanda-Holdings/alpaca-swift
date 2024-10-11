@@ -1,7 +1,7 @@
 # Alpaca Swift
 
 This is a fork of [@AndrewBarba](https://github.com/AndrewBarba) alpaca-swift package. It is up to date (As of October 2024) to the Alpaca documentation.
-A fully-typed, Linux compatible, [Alpaca](https://alpaca.markets) library written in Swift 5.5.
+A fully-typed, Linux compatible, [AlpacaSwift](https://alpaca.markets) library written in Swift 5.5.
 
 #### Features
 
@@ -30,16 +30,16 @@ You can use [The Swift Package Manager](https://swift.org/package-manager) to in
 import PackageDescription
 
 let package = Package(
-    name: "Alpaca",
+    name: "AlpacaSwift",
     products: [
-        .library(name: "Alpaca", targets: ["Alpaca"])
+        .library(name: "AlpacaSwift", targets: ["AlpacaSwift"])
     ],
     dependencies: [
         .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", from: "5.0.2")
     ],
     targets: [
         .target(
-            name: "Alpaca",
+            name: "AlpacaSwift",
             dependencies: [
                 .product(name: "SwiftyJSON", package: "SwiftyJSON")
             ]
