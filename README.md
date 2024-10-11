@@ -1,5 +1,6 @@
 # Alpaca Swift
 
+This is a fork of [@AndrewBarba](https://github.com/AndrewBarba) alpaca-swift package. It is up to date (As of October 2024) to the Alpaca documentation.
 A fully-typed, Linux compatible, [Alpaca](https://alpaca.markets) library written in Swift 5.5.
 
 #### Features
