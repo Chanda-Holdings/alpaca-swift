@@ -13,11 +13,15 @@ let package = Package(
     products: [
         .library(name: "Alpaca", targets: ["Alpaca"])
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", from: "5.0.2")
+    ],
     targets: [
         .target(
             name: "Alpaca",
-            dependencies: []
+            dependencies: [
+                .product(name: "SwiftyJSON", package: "SwiftyJSON")
+            ]
         ),
         .testTarget(
             name: "AlpacaTests",

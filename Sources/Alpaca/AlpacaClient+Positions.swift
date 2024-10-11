@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Position: Codable {
+public struct Position: Codable, Hashable {
     public enum Side: String, Codable, CaseIterable {
         case long = "long"
         case short = "short"
@@ -19,6 +19,7 @@ public struct Position: Codable {
     public let assetClass: Asset.Class
     public let avgEntryPrice: NumericString<Double>
     public let qty: NumericString<Double>
+    public let qtyAvailable: NumericString<Double>?
     public let side: Side
     public let marketValue: NumericString<Double>
     public let costBasis: NumericString<Double>
@@ -60,7 +61,15 @@ extension AlpacaClient {
         return try await delete("positions/\(assetId.uuidString)")
     }
 
-    public func closePosition(symbol: String) async throws -> Order {
-        return try await delete("positions/\(symbol)")
+    public func closePosition(symbol: String, qty: Double? = nil) async throws -> Order {
+        var searchParams:[String: String?] = [:]
+        if let qty = qty, qty != 0 {
+            searchParams["qty"] = qty.absoluteString()
+        }
+        return try await delete("positions/\(symbol)", searchParams: searchParams)
+    }
+    
+    public func exerciseOptionPosition(symbolOrContractId: String) async throws {
+        let _:[String:String] = try await post("positions/\(symbolOrContractId)/exercise")
     }
 }

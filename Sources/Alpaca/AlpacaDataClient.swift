@@ -13,8 +13,8 @@ public struct AlpacaDataClient: AlpacaClientProtocol {
     
     public let timeoutInterval: TimeInterval
 
-    internal init(key: String, secret: String, timeoutInterval: TimeInterval) {
-        self.environment = .data(key: key, secret: secret)
+    internal init(environment: Environment, timeoutInterval: TimeInterval) {
+        self.environment = environment
         self.timeoutInterval = timeoutInterval
     }
 }

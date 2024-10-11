@@ -1,11 +1,12 @@
 //
-//  swift
-//  
+//  Common.swift
+//
 //
 //  Created by Andrew Barba on 8/15/20.
 //
 
 import Foundation
+import UIKit.UIImage
 
 public struct EmptyResponse: Decodable {
     internal static let jsonData = try! JSONSerialization.data(withJSONObject: [:], options: [])
@@ -26,7 +27,7 @@ public enum SortDirection: String, Codable, CaseIterable {
     case desc = "desc"
 }
 
-public protocol StringRepresentable: CustomStringConvertible {
+public protocol StringRepresentable: CustomStringConvertible, Hashable {
     init?(_ string: String)
 }
 
@@ -36,7 +37,7 @@ extension Float: StringRepresentable {}
 
 extension Int: StringRepresentable {}
 
-public struct NumericString<Value: StringRepresentable>: Codable {
+public struct NumericString<Value: StringRepresentable>: Codable, Hashable {
     public var value: Value
 
     public init(from decoder: Decoder) throws {
@@ -58,5 +59,20 @@ public struct NumericString<Value: StringRepresentable>: Codable {
     public func encode(to encoder: Encoder) throws {
         var container = encoder.singleValueContainer()
         try container.encode(value.description)
+    }
+    
+    init(value: Value) {
+        self.value = value
+    }
+    
+}
+
+func downloadImage(url: URL) async -> UIImage? {
+    do {
+        let (data, _) = try await URLSession.shared.data(from: url)
+        return UIImage(data: data)
+    } catch {
+        print("Error downloading image: \(error)")
+        return nil
     }
 }
