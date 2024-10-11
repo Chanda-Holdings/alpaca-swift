@@ -81,7 +81,7 @@ public class AccountActivity: Codable, Identifiable {
         case ssp = "SSP"
         
         
-        func description() -> String {
+        public func description() -> String {
             switch self {
             case .fill:
                 return "Order fills (both partial and full fills)"

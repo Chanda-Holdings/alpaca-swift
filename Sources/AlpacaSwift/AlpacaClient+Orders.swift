@@ -29,7 +29,7 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
         case buy = "buy"
         case sell = "sell"
         
-        func display() -> String {
+        public func display() -> String {
             return self.rawValue.replacingOccurrences(of: "_", with: " ").capitalized
         }
         
@@ -44,15 +44,15 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
         case sellToOpen = "sell_to_open"
         case sellToClose = "sell_to_close"
         
-        func display() -> String {
+        public func display() -> String {
             return self.rawValue.replacingOccurrences(of: "_", with: " ").capitalized
         }
         
-        static func fromString(string: String) -> PositionIntent? {
+        public static func fromString(string: String) -> PositionIntent? {
             return PositionIntent(rawValue: string.lowercased().replacingOccurrences(of: " ", with: "_"))
         }
         
-        func side() -> Side {
+        public func side() -> Side {
             switch self {
             case .buyToOpen, .buyToClose:
                 return Side.buy
@@ -81,7 +81,7 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
         case calculated = "calculated"
         case held = "held"
         
-        func display() -> String {
+        public func display() -> String {
             return self.rawValue.replacingOccurrences(of: "_", with: " ").capitalized
         }
         
@@ -102,7 +102,7 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
         case stopLimit = "stop_limit"
         case trailingStop = "trailing_stop"
         
-        func display() -> String {
+        public func display() -> String {
             return self.rawValue.replacingOccurrences(of: "_", with: " ").capitalized
         }
         
@@ -128,7 +128,7 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
         case ioc = "ioc"
         case fok = "fok"
         
-        func display() -> String {
+        public func display() -> String {
             return TimeInForce.nameDict()[self]!.replacingOccurrences(of: "_", with: " ").capitalized
         }
         
@@ -152,7 +152,7 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
         }
     }
     
-    func isCancelable() -> Bool {
+    public func isCancelable() -> Bool {
         return [Order.Status.new, Order.Status.accepted, Order.Status.pendingNew, Order.Status.partiallyFilled, Order.Status.acceptedForBidding, Order.Status.calculated, Order.Status.held].contains(self.status)
     }
     

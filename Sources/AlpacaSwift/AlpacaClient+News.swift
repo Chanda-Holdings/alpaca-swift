@@ -39,7 +39,7 @@ public struct News: Codable, Identifiable {
     public let symbols: [String]
     public let source: String
     
-    func downloadThumbnail() async -> UIImage? {
+    public func downloadThumbnail() async -> UIImage? {
         guard let thumb = thumb else { return nil }
         return await downloadImage(url: thumb)
     }

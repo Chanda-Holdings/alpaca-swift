@@ -16,7 +16,7 @@ public struct AlpacaClient: AlpacaClientProtocol {
     
     public let timeoutInterval: TimeInterval
     
-    internal let canSwitch: Bool
+    public let canSwitch: Bool
     
     public init(_ environment: Environment, timeoutInterval: TimeInterval = 10, dataTimeoutInterval: TimeInterval = 10) {
         self.timeoutInterval = timeoutInterval

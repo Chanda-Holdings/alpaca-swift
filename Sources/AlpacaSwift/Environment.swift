@@ -24,7 +24,7 @@ public struct Environment: Hashable {
          return lhs.api == rhs.api && lhs.key == rhs.key && lhs.secret == rhs.secret && lhs.access_token == rhs.access_token
      }
     
-    internal static func data(key: String, secret: String) -> Self {
+    public static func data(key: String, secret: String) -> Self {
         Environment(api: "https://data.alpaca.markets/v2", key: key, secret: secret, access_token: "")
     }
     
@@ -32,7 +32,7 @@ public struct Environment: Hashable {
         Environment(api: "https://api.alpaca.markets/v2", key: key, secret: secret, access_token: "")
     }
     
-    internal static func paper(key: String, secret: String) -> Self {
+    public static func paper(key: String, secret: String) -> Self {
         Environment(api: "https://paper-api.alpaca.markets/v2", key: key, secret: secret, access_token: "")
     }
     
@@ -44,11 +44,11 @@ public struct Environment: Hashable {
         Environment(api: "https://api.alpaca.markets/v2", key: "", secret: "",access_token: access_token)
     }
     
-    internal static func paper(access_token: String) -> Self {
+    public static func paper(access_token: String) -> Self {
         Environment(api: "https://paper-api.alpaca.markets/v2", key: "", secret: "",access_token: access_token)
     }
     
-    func isPaper() -> Bool {
+    public func isPaper() -> Bool {
         return self.api.contains("paper")
     }
     

@@ -36,7 +36,7 @@ public struct AccountConfigurations: Codable {
         case level1 = 1
         case level2 = 2
         
-        func description() -> String {
+        public func description() -> String {
             switch self {
             case .disabled:
                 return "Disabled"
@@ -47,7 +47,7 @@ public struct AccountConfigurations: Codable {
             }
         }
         
-        func display() -> String {
+        public func display() -> String {
             switch self {
             case .disabled:
                 return "Disabled"

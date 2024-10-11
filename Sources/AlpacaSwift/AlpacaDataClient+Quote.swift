@@ -75,7 +75,7 @@ public struct Quote: Codable {
 
 extension AlpacaDataClient {
     
-    func quotes(symbol: String, feed: Quote.Feed? = nil, currency: String? = nil, start: Date? = nil, end: Date? = nil, limit: Int? = nil, asof: Date? = nil, sort: Quote.Sort? = nil) async throws -> [Quote] {
+    public func quotes(symbol: String, feed: Quote.Feed? = nil, currency: String? = nil, start: Date? = nil, end: Date? = nil, limit: Int? = nil, asof: Date? = nil, sort: Quote.Sort? = nil) async throws -> [Quote] {
         var feed = feed
         if feed == nil {
             feed = Quote.Feed(rawValue: UserDefaults.standard.string(forKey: "feed") ?? Quote.Feed.sip.rawValue)
@@ -107,11 +107,11 @@ extension AlpacaDataClient {
         }
     }
     
-    func quotes(asset: Asset, currency: String? = nil, start: Date? = nil, end: Date? = nil, limit: Int? = nil, asof: Date? = nil, sort: Quote.Sort? = nil) async throws -> [Quote] {
+    public func quotes(asset: Asset, currency: String? = nil, start: Date? = nil, end: Date? = nil, limit: Int? = nil, asof: Date? = nil, sort: Quote.Sort? = nil) async throws -> [Quote] {
         return try await quotes(symbol: asset.symbol, currency: currency, start: start, end: end, limit: limit, asof: asof, sort: sort)
     }
     
-    func quote(symbol: String, feed: Quote.Feed? = nil, currency: String? = nil) async throws -> Quote {
+    public func quote(symbol: String, feed: Quote.Feed? = nil, currency: String? = nil) async throws -> Quote {
         var feed = feed
         if feed == nil {
             feed = Quote.Feed(rawValue: UserDefaults.standard.string(forKey: "feed") ?? Quote.Feed.sip.rawValue)

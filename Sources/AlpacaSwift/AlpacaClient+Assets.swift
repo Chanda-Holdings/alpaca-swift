@@ -13,7 +13,7 @@ public struct Asset: Codable, Identifiable {
         case crypto = "crypto"
         case usOption = "us_option"
         
-        func display() -> String {
+        public func display() -> String {
             return self.rawValue.replacingOccurrences(of: "_", with: " ").capitalized
         }
     }
@@ -95,7 +95,6 @@ public struct Contract: Codable, Identifiable {
     public let openInterestDate: Date?
     public let closePrice: String?
     public let closePriceDate: Date?
-    
     
     var breakeven: Double { strikePrixe + Double(closePrice ?? "0")! }
 }
