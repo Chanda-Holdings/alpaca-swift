@@ -13,3 +13,42 @@ A fully-typed, Linux compatible, [Alpaca](https://alpaca.markets) library writte
 #### Documentation
 
 [https://andrewbarba.github.io/alpaca-swift/](https://andrewbarba.github.io/alpaca-swift/)
+
+## Requirements
+
+- iOS 15.0+ | macOS 12.0+ | tvOS 15.0+ | watchOS 8.0+
+- Xcode 8
+
+## Integration
+#### Swift Package Manager
+
+You can use [The Swift Package Manager](https://swift.org/package-manager) to install `Alpaca` by adding the proper description to your `Package.swift` file:
+
+```swift
+// swift-tools-version:5.5
+
+import PackageDescription
+
+let package = Package(
+    name: "Alpaca",
+    products: [
+        .library(name: "Alpaca", targets: ["Alpaca"])
+    ],
+    dependencies: [
+        .package(url: "https://github.com/SwiftyJSON/SwiftyJSON.git", from: "5.0.2")
+    ],
+    targets: [
+        .target(
+            name: "Alpaca",
+            dependencies: [
+                .product(name: "SwiftyJSON", package: "SwiftyJSON")
+            ]
+        )
+    ],
+    swiftLanguageVersions: [.version("5.5")]
+)
+
+```
+Then run `swift build` whenever you get prepared.
+
+Note that SwiftyJSON is a required dependency
