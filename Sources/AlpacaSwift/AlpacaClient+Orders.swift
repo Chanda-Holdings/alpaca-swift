@@ -156,6 +156,19 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
         return [Order.Status.new, Order.Status.accepted, Order.Status.pendingNew, Order.Status.partiallyFilled, Order.Status.acceptedForBidding, Order.Status.calculated, Order.Status.held].contains(self.status)
     }
     
+    public func pnl() -> Double? {
+        guard self.order_class != .bracket, let filledAvgPrice = self.filledAvgPrice else { return nil }
+        
+        let baseValue = self.filledQty.value * filledAvgPrice.value
+        for leg in self.legs ?? [] {
+            if leg.status == .filled, let legFilledAvgPrice = leg.filledAvgPrice {
+                let finalValue = leg.filledQty.value * legFilledAvgPrice.value
+                return finalValue - baseValue
+            }
+        }
+        return nil
+    }
+    
     public let id: UUID
     public let clientOrderId: String
     public let createdAt: Date

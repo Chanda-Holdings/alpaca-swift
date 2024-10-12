@@ -1,6 +1,6 @@
 import Foundation
 
-public struct AlpacaClient: AlpacaClientProtocol {
+public struct AlpacaClient: AlpacaClientProtocol, Equatable {
     
     public static func ==(lhs: AlpacaClient, rhs: AlpacaClient) -> Bool {
         return lhs.environment == rhs.environment
