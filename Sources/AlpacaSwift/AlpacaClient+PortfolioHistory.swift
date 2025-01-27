@@ -31,7 +31,7 @@ public struct PortfolioHistory: Codable {
     public let timestamp: [Int]
     public let equity: [Double]
     public let profitLoss: [Double]
-    public let profitLossPct: [Double]?
+    public let profitLossPct: [Double?]
     public let baseValue: Double
     public let baseValueAsof: Date?
     public let timeframe: Timeframe
