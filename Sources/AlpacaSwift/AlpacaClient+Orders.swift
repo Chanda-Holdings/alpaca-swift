@@ -156,17 +156,64 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
         return [Order.Status.new, Order.Status.accepted, Order.Status.pendingNew, Order.Status.partiallyFilled, Order.Status.acceptedForBidding, Order.Status.calculated, Order.Status.held].contains(self.status)
     }
     
-    public func pnl() -> Double? {
-        guard self.order_class != .bracket, let filledAvgPrice = self.filledAvgPrice else { return nil }
-        
-        let baseValue = self.filledQty.value * filledAvgPrice.value
-        for leg in self.legs ?? [] {
-            if leg.status == .filled, let legFilledAvgPrice = leg.filledAvgPrice {
-                let finalValue = leg.filledQty.value * legFilledAvgPrice.value
-                return finalValue - baseValue
+    public func pnl(allOrders: [Order]) -> Double? {
+        if self.order_class == .bracket {
+            guard let filledAvgPrice = self.filledAvgPrice else { return nil }
+            
+            let baseValue = self.filledQty.value * filledAvgPrice.value
+            for leg in self.legs ?? [] {
+                if leg.status == .filled, let legFilledAvgPrice = leg.filledAvgPrice {
+                    let finalValue = leg.filledQty.value * legFilledAvgPrice.value
+                    return finalValue - baseValue
+                }
             }
+            return nil
+        } else {
+            guard let price = self.filledAvgPrice?.value,
+                  let filledAt = self.filledAt else {
+                return nil
+            }
+            
+            let symbol = self.symbol
+            let qty = self.filledQty.value
+
+            // If buy, look for a later sell; if sell, look for earlier buy
+            let matchingOrders = allOrders
+                .filter { $0.symbol == symbol }
+                .filter { other in
+                    guard let otherPrice = other.filledAvgPrice?.value,
+                          let otherTime = other.filledAt else { return false }
+                    let otherQty = other.filledQty.value
+
+                    // Opposite side
+                    guard self.side != other.side else { return false }
+
+                    // Time comparison
+                    return self.side == .buy ? (otherTime > filledAt) : (otherTime < filledAt)
+                }
+                .sorted(by: { a, b in
+                    guard let at = a.filledAt, let bt = b.filledAt else { return false }
+                    return at < bt
+                })
+
+            var remaining = qty
+            var pnl = 0.0
+
+            for match in matchingOrders {
+                guard let matchPrice = match.filledAvgPrice?.value else { continue }
+                let matchQty = match.filledQty.value
+
+                let matchedQty = min(remaining, matchQty)
+                let tradePnl = (self.side == .buy)
+                    ? (matchPrice - price) * matchedQty
+                    : (price - matchPrice) * matchedQty
+                pnl += tradePnl
+                remaining -= matchedQty
+                if remaining <= 0 { break }
+            }
+
+            return remaining < qty ? pnl : nil
         }
-        return nil
     }
     
     public let id: UUID
