@@ -156,64 +156,54 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
         return [Order.Status.new, Order.Status.accepted, Order.Status.pendingNew, Order.Status.partiallyFilled, Order.Status.acceptedForBidding, Order.Status.calculated, Order.Status.held].contains(self.status)
     }
     
-    public func pnl(allOrders: [Order]) -> Double? {
-        if self.order_class == .bracket {
-            guard let filledAvgPrice = self.filledAvgPrice else { return nil }
-            
-            let baseValue = self.filledQty.value * filledAvgPrice.value
-            for leg in self.legs ?? [] {
-                if leg.status == .filled, let legFilledAvgPrice = leg.filledAvgPrice {
-                    let finalValue = leg.filledQty.value * legFilledAvgPrice.value
-                    return finalValue - baseValue
-                }
-            }
-            return nil
-        } else {
-            guard let price = self.filledAvgPrice?.value,
-                  let filledAt = self.filledAt else {
-                return nil
-            }
-            
-            let symbol = self.symbol
-            let qty = self.filledQty.value
-
-            // If buy, look for a later sell; if sell, look for earlier buy
-            let matchingOrders = allOrders
-                .filter { $0.symbol == symbol }
-                .filter { other in
-                    guard let otherPrice = other.filledAvgPrice?.value,
-                          let otherTime = other.filledAt else { return false }
-                    let otherQty = other.filledQty.value
-
-                    // Opposite side
-                    guard self.side != other.side else { return false }
-
-                    // Time comparison
-                    return self.side == .buy ? (otherTime > filledAt) : (otherTime < filledAt)
-                }
-                .sorted(by: { a, b in
-                    guard let at = a.filledAt, let bt = b.filledAt else { return false }
-                    return at < bt
-                })
-
-            var remaining = qty
-            var pnl = 0.0
-
-            for match in matchingOrders {
-                guard let matchPrice = match.filledAvgPrice?.value else { continue }
-                let matchQty = match.filledQty.value
-
-                let matchedQty = min(remaining, matchQty)
-                let tradePnl = (self.side == .buy)
-                    ? (matchPrice - price) * matchedQty
-                    : (price - matchPrice) * matchedQty
-                pnl += tradePnl
-                remaining -= matchedQty
-                if remaining <= 0 { break }
-            }
-
-            return remaining < qty ? pnl : nil
+    public func pnl(orderHistory: [Order]) -> Double? {
+        if self.order_class == .bracket, let filledAvgPrice = self.filledAvgPrice?.value,
+           let filledLeg = self.legs?.first(where: { $0.status == .filled && $0.filledAvgPrice?.value != nil }),
+           let legPrice = filledLeg.filledAvgPrice?.value {
+            return filledLeg.filledQty.value * legPrice - self.filledQty.value * filledAvgPrice
         }
+        
+        var lots: [(qty: Double, price: Double)] = []
+        var position: Double = 0
+        
+        for order in orderHistory.lazy.filter({ $0.symbol == self.symbol }).sorted(by: { ($0.filledAt ?? .distantPast) < ($1.filledAt ?? .distantPast) }) {
+            guard let price = order.filledAvgPrice?.value else { continue }
+            let qty = order.filledQty.value
+            let signed = order.side == .buy ? qty : -qty
+            let isTarget = order.id == self.id
+            
+            if position == 0 || (position > 0) == (signed > 0) {
+                if isTarget { return nil }
+                lots.append((qty, price))
+                position += signed
+            } else {
+                var remaining = abs(signed), pnl = 0.0
+                let multiplier = signed > 0 ? 1.0 : -1.0
+                var i = 0
+                
+                while remaining > 0 && i < lots.count {
+                    let matched = min(remaining, lots[i].qty)
+                    pnl += matched * multiplier * (lots[i].price - price)
+                    remaining -= matched
+                    position += multiplier * matched
+                    
+                    if lots[i].qty > matched {
+                        lots[i].qty -= matched
+                        i += 1
+                    } else {
+                        lots.remove(at: i)
+                    }
+                }
+                
+                if isTarget { return pnl }
+                if remaining > 0 {
+                    lots.insert((remaining, price), at: 0)
+                    position += signed > 0 ? remaining : -remaining
+                }
+            }
+        }
+        
+        return nil
     }
     
     public let id: UUID
