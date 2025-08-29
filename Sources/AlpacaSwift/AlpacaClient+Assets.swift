@@ -11,6 +11,7 @@ public struct Asset: Codable, Identifiable {
     public enum Class: String, Codable, CaseIterable {
         case usEquity = "us_equity"
         case crypto = "crypto"
+        case cryptoPerp = "crypto_perp"
         case usOption = "us_option"
         
         public func display() -> String {
@@ -19,6 +20,7 @@ public struct Asset: Codable, Identifiable {
     }
 
     public enum Exchange: String, Codable, CaseIterable {
+        case ascx = "ASCX"
         case amex = "AMEX"
         case arca = "ARCA"
         case bats = "BATS"
