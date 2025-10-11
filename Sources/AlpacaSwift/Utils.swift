@@ -82,6 +82,9 @@ internal enum Utils {
             if let date = Self.iso8601DateTimeZoneFormatter.date(from: value) {
                 return date
             }
+            if value == "0000-00-00" {
+                return Date.distantPast
+            }
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Invalid date format: \(value)")
         })
         return decoder

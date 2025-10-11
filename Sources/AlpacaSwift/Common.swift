@@ -76,3 +76,26 @@ public func downloadImage(url: URL) async -> UIImage? {
         return nil
     }
 }
+
+@propertyWrapper
+public struct DefaultZero: Codable {
+    public var wrappedValue: Double
+    
+    public init(wrappedValue: Double = 0.0) {
+        self.wrappedValue = wrappedValue
+    }
+    
+    public init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if container.decodeNil() {
+            wrappedValue = 0.0
+        } else {
+            wrappedValue = try container.decode(Double.self)
+        }
+    }
+    
+    public func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        try container.encode(wrappedValue)
+    }
+}

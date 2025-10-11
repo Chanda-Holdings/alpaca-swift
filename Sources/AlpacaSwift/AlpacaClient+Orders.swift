@@ -72,6 +72,7 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
         case replaced = "replaced"
         case pendingCancel = "pending_cancel"
         case pendingReplace = "pending_replace"
+        case pendingReview = "pending_review"
         case accepted = "accepted"
         case pendingNew = "pending_new"
         case acceptedForBidding = "accepted_for_bidding"
