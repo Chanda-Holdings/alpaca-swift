@@ -157,36 +157,143 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
         return [Order.Status.new, Order.Status.accepted, Order.Status.pendingNew, Order.Status.partiallyFilled, Order.Status.acceptedForBidding, Order.Status.calculated, Order.Status.held].contains(self.status)
     }
     
-    public func pnl(orderHistory: [Order]) -> Double? {
-        if self.order_class == .bracket, let filledAvgPrice = self.filledAvgPrice?.value,
-           let filledLeg = self.legs?.first(where: { $0.status == .filled && $0.filledAvgPrice?.value != nil }),
-           let legPrice = filledLeg.filledAvgPrice?.value {
-            return filledLeg.filledQty.value * legPrice - self.filledQty.value * filledAvgPrice
-        }
+    public struct PositionContext {
+        public let action: String
+        public let positionBefore: Double
+        public let positionAfter: Double
+    }
+    
+    public func positionContext(orderHistory: [Order]) -> PositionContext? {
+        // Only show context for filled orders
+        guard self.status == .filled || self.filledQty.value > 0 else { return nil }
         
-        var lots: [(qty: Double, price: Double)] = []
         var position: Double = 0
         
-        for order in orderHistory.lazy.filter({ $0.symbol == self.symbol }).sorted(by: { ($0.filledAt ?? .distantPast) < ($1.filledAt ?? .distantPast) }) {
-            guard let price = order.filledAvgPrice?.value else { continue }
+        // Calculate position up to this order
+        for order in orderHistory.lazy
+            .filter({ $0.symbol == self.symbol })
+            .sorted(by: { ($0.filledAt ?? .distantPast) < ($1.filledAt ?? .distantPast) }) {
+            
+            guard order.filledQty.value > 0 else { continue }
+            
             let qty = order.filledQty.value
             let signed = order.side == .buy ? qty : -qty
+            
+            if order.id == self.id {
+                // Found our target order
+                let positionBefore = position
+                let positionAfter = position + signed
+                
+                // Determine the action
+                let action: String
+                if positionBefore == 0 {
+                    // Opening new position
+                    if signed > 0 {
+                        action = "Opening Long"
+                    } else {
+                        action = "Opening Short"
+                    }
+                } else if positionBefore > 0 && signed > 0 {
+                    // Adding to long
+                    action = "Extending Long"
+                } else if positionBefore < 0 && signed < 0 {
+                    // Adding to short
+                    action = "Extending Short"
+                } else if positionBefore > 0 && signed < 0 {
+                    // Reducing or closing long
+                    if positionAfter >= 0 {
+                        if positionAfter == 0 {
+                            action = "Closing Long"
+                        } else {
+                            action = "Reducing Long"
+                        }
+                    } else {
+                        action = "Reversing to Short"
+                    }
+                } else if positionBefore < 0 && signed > 0 {
+                    // Reducing or covering short
+                    if positionAfter <= 0 {
+                        if positionAfter == 0 {
+                            action = "Covering Short"
+                        } else {
+                            action = "Reducing Short"
+                        }
+                    } else {
+                        action = "Reversing to Long"
+                    }
+                } else {
+                    action = "Unknown"
+                }
+                
+                return PositionContext(action: action, positionBefore: positionBefore, positionAfter: positionAfter)
+            }
+            
+            position += signed
+        }
+        
+        return nil
+    }
+    
+    public func pnl(orderHistory: [Order]) -> Double? {
+        // Special handling for bracket orders
+        if self.order_class == .bracket,
+           let filledAvgPrice = self.filledAvgPrice?.value,
+           let filledLeg = self.legs?.first(where: { $0.status == .filled && $0.filledAvgPrice?.value != nil }),
+           let legPrice = filledLeg.filledAvgPrice?.value {
+            // Calculate based on the side of the original order
+            let qty = filledLeg.filledQty.value
+            if self.side == .buy {
+                // Bought low, sold high (hopefully)
+                return qty * (legPrice - filledAvgPrice)
+            } else {
+                // Sold high, bought low (hopefully)
+                return qty * (filledAvgPrice - legPrice)
+            }
+        }
+        
+        // Track lots with signed prices: positive = long position, negative = short position
+        var lots: [(qty: Double, price: Double)] = []
+        
+        for order in orderHistory.lazy
+            .filter({ $0.symbol == self.symbol })
+            .sorted(by: { ($0.filledAt ?? .distantPast) < ($1.filledAt ?? .distantPast) }) {
+            
+            guard let price = order.filledAvgPrice?.value else { continue }
+            let qty = order.filledQty.value
             let isTarget = order.id == self.id
             
-            if position == 0 || (position > 0) == (signed > 0) {
-                if isTarget { return nil }
-                lots.append((qty, price))
-                position += signed
+            // Determine if this order opens or closes position
+            let isOpening = lots.isEmpty ||
+                           (lots[0].price > 0 && order.side == .buy) ||
+                           (lots[0].price < 0 && order.side == .sell)
+            
+            if isOpening {
+                // Opening a new position or adding to existing
+                if isTarget { return nil }  // Target order doesn't close anything
+                
+                // Store price with sign to indicate position direction
+                let signedPrice = order.side == .buy ? price : -price
+                lots.append((qty, signedPrice))
             } else {
-                var remaining = abs(signed), pnl = 0.0
-                let multiplier = signed > 0 ? 1.0 : -1.0
+                // Closing position using FIFO matching
+                var remaining = qty
+                var pnl = 0.0
                 var i = 0
                 
                 while remaining > 0 && i < lots.count {
                     let matched = min(remaining, lots[i].qty)
-                    pnl += matched * multiplier * (lots[i].price - price)
+                    
+                    // Calculate PnL based on position direction
+                    if lots[i].price > 0 {
+                        // Closing long position: PnL = (sell price - buy price) × qty
+                        pnl += matched * (price - lots[i].price)
+                    } else {
+                        // Closing short position: PnL = (sell price - buy price) × qty
+                        // lots[i].price is negative (short entry), so we use abs() to get the actual price
+                        pnl += matched * (abs(lots[i].price) - price)
+                    }
+                    
                     remaining -= matched
-                    position += multiplier * matched
                     
                     if lots[i].qty > matched {
                         lots[i].qty -= matched
@@ -197,9 +304,11 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
                 }
                 
                 if isTarget { return pnl }
+                
+                // If there's remaining quantity, it opens a new position in opposite direction
                 if remaining > 0 {
-                    lots.insert((remaining, price), at: 0)
-                    position += signed > 0 ? remaining : -remaining
+                    let signedPrice = order.side == .buy ? price : -price
+                    lots.append((remaining, signedPrice))
                 }
             }
         }
