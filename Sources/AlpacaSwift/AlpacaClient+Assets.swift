@@ -48,7 +48,8 @@ public struct Asset: Codable, Identifiable {
         case fractionalEhEnabled = "fractional_eh_enabled"
         case hasOptions = "has_options"
         case optionsLateClose = "options_late_close"
-        
+        case overnightTradable = "overnight_tradable"
+        case overnightHalted = "overnight_halted"
     }
 
     public let id: UUID
