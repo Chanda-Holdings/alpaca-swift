@@ -163,138 +163,191 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
         public let positionAfter: Double
     }
     
+    // A flattened fill event used by pnl/positionContext. Bracket/OCO/OTO legs
+    // aren't returned as top-level orders when fetching with nested:true, so we
+    // expand them here to keep FIFO history consistent.
+    private struct FillEvent {
+        let id: UUID
+        let filledAt: Date?
+        let side: Side
+        let qty: Double
+        let price: Double?
+    }
+
+    private static func fillEvents(symbol: String, orderHistory: [Order]) -> [FillEvent] {
+        // Defensive dedupe by id (parents and legs separately). Callers may
+        // pass histories that contain duplicate Order entries from pagination
+        // merges or stale on-disk caches; without this, every duplicate would
+        // be counted again and inflate the running position.
+        var seenIDs = Set<UUID>()
+        var events: [FillEvent] = []
+        for order in orderHistory where order.symbol == symbol {
+            if order.filledQty.value > 0, seenIDs.insert(order.id).inserted {
+                events.append(FillEvent(
+                    id: order.id,
+                    filledAt: order.filledAt,
+                    side: order.side,
+                    qty: order.filledQty.value,
+                    price: order.filledAvgPrice?.value
+                ))
+            }
+            if let legs = order.legs {
+                for leg in legs where leg.symbol == symbol && leg.filledQty.value > 0 && seenIDs.insert(leg.id).inserted {
+                    events.append(FillEvent(
+                        id: leg.id,
+                        filledAt: leg.filledAt,
+                        side: leg.side,
+                        qty: leg.filledQty.value,
+                        price: leg.filledAvgPrice?.value
+                    ))
+                }
+            }
+        }
+        events.sort { ($0.filledAt ?? .distantPast) < ($1.filledAt ?? .distantPast) }
+        return events
+    }
+
+    /// Per-fill record produced by `positionTrace` — useful for diagnosing
+    /// FIFO/position drift against the broker's actual current position.
+    public struct PositionTraceEntry {
+        public let orderID: UUID
+        public let isLeg: Bool
+        public let filledAt: Date?
+        public let side: Side
+        public let qty: Double
+        public let signedDelta: Double
+        public let runningPosition: Double
+        public let isTarget: Bool
+    }
+
+    /// Walks every fill event for `self.symbol` in chronological order and
+    /// returns the running position at each step. The same flattening logic
+    /// that `positionContext` uses, exposed for debugging.
+    public func positionTrace(orderHistory: [Order]) -> [PositionTraceEntry] {
+        var trace: [PositionTraceEntry] = []
+        var position: Double = 0
+
+        // Detect parent order ids so we can flag legs in the trace.
+        var parentLegIDs = Set<UUID>()
+        for order in orderHistory where order.symbol == self.symbol {
+            if let legs = order.legs {
+                for leg in legs where leg.symbol == self.symbol {
+                    parentLegIDs.insert(leg.id)
+                }
+            }
+        }
+
+        for event in Order.fillEvents(symbol: self.symbol, orderHistory: orderHistory) {
+            let signed = event.side == .buy ? event.qty : -event.qty
+            position += signed
+            trace.append(PositionTraceEntry(
+                orderID: event.id,
+                isLeg: parentLegIDs.contains(event.id),
+                filledAt: event.filledAt,
+                side: event.side,
+                qty: event.qty,
+                signedDelta: signed,
+                runningPosition: position,
+                isTarget: event.id == self.id
+            ))
+        }
+
+        return trace
+    }
+
     public func positionContext(orderHistory: [Order]) -> PositionContext? {
         // Only show context for filled orders
         guard self.status == .filled || self.filledQty.value > 0 else { return nil }
-        
+
         var position: Double = 0
-        
-        // Calculate position up to this order
-        for order in orderHistory.lazy
-            .filter({ $0.symbol == self.symbol })
-            .sorted(by: { ($0.filledAt ?? .distantPast) < ($1.filledAt ?? .distantPast) }) {
-            
-            guard order.filledQty.value > 0 else { continue }
-            
-            let qty = order.filledQty.value
-            let signed = order.side == .buy ? qty : -qty
-            
-            if order.id == self.id {
-                // Found our target order
+
+        for event in Order.fillEvents(symbol: self.symbol, orderHistory: orderHistory) {
+            let qty = event.qty
+            let signed = event.side == .buy ? qty : -qty
+
+            if event.id == self.id {
                 let positionBefore = position
                 let positionAfter = position + signed
-                
-                // Determine the action
+
                 let action: String
                 if positionBefore == 0 {
-                    // Opening new position
-                    if signed > 0 {
-                        action = "Opening Long"
-                    } else {
-                        action = "Opening Short"
-                    }
+                    action = signed > 0 ? "Opening Long" : "Opening Short"
                 } else if positionBefore > 0 && signed > 0 {
-                    // Adding to long
                     action = "Extending Long"
                 } else if positionBefore < 0 && signed < 0 {
-                    // Adding to short
                     action = "Extending Short"
                 } else if positionBefore > 0 && signed < 0 {
-                    // Reducing or closing long
                     if positionAfter >= 0 {
-                        if positionAfter == 0 {
-                            action = "Closing Long"
-                        } else {
-                            action = "Reducing Long"
-                        }
+                        action = positionAfter == 0 ? "Closing Long" : "Reducing Long"
                     } else {
                         action = "Reversing to Short"
                     }
                 } else if positionBefore < 0 && signed > 0 {
-                    // Reducing or covering short
                     if positionAfter <= 0 {
-                        if positionAfter == 0 {
-                            action = "Covering Short"
-                        } else {
-                            action = "Reducing Short"
-                        }
+                        action = positionAfter == 0 ? "Covering Short" : "Reducing Short"
                     } else {
                         action = "Reversing to Long"
                     }
                 } else {
                     action = "Unknown"
                 }
-                
+
                 return PositionContext(action: action, positionBefore: positionBefore, positionAfter: positionAfter)
             }
-            
+
             position += signed
         }
-        
+
         return nil
     }
-    
+
     public func pnl(orderHistory: [Order]) -> Double? {
-        // Special handling for bracket orders
+        // Bracket round-trip short-circuit: when called on the bracket parent
+        // itself, return realized PnL using the filled exit leg directly.
         if self.order_class == .bracket,
            let filledAvgPrice = self.filledAvgPrice?.value,
            let filledLeg = self.legs?.first(where: { $0.status == .filled && $0.filledAvgPrice?.value != nil }),
            let legPrice = filledLeg.filledAvgPrice?.value {
-            // Calculate based on the side of the original order
             let qty = filledLeg.filledQty.value
             if self.side == .buy {
-                // Bought low, sold high (hopefully)
                 return qty * (legPrice - filledAvgPrice)
             } else {
-                // Sold high, bought low (hopefully)
                 return qty * (filledAvgPrice - legPrice)
             }
         }
-        
+
         // Track lots with signed prices: positive = long position, negative = short position
         var lots: [(qty: Double, price: Double)] = []
-        
-        for order in orderHistory.lazy
-            .filter({ $0.symbol == self.symbol })
-            .sorted(by: { ($0.filledAt ?? .distantPast) < ($1.filledAt ?? .distantPast) }) {
-            
-            guard let price = order.filledAvgPrice?.value else { continue }
-            let qty = order.filledQty.value
-            let isTarget = order.id == self.id
-            
-            // Determine if this order opens or closes position
+
+        for event in Order.fillEvents(symbol: self.symbol, orderHistory: orderHistory) {
+            guard let price = event.price else { continue }
+            let qty = event.qty
+            let isTarget = event.id == self.id
+
             let isOpening = lots.isEmpty ||
-                           (lots[0].price > 0 && order.side == .buy) ||
-                           (lots[0].price < 0 && order.side == .sell)
-            
+                           (lots[0].price > 0 && event.side == .buy) ||
+                           (lots[0].price < 0 && event.side == .sell)
+
             if isOpening {
-                // Opening a new position or adding to existing
-                if isTarget { return nil }  // Target order doesn't close anything
-                
-                // Store price with sign to indicate position direction
-                let signedPrice = order.side == .buy ? price : -price
+                if isTarget { return nil }
+                let signedPrice = event.side == .buy ? price : -price
                 lots.append((qty, signedPrice))
             } else {
-                // Closing position using FIFO matching
                 var remaining = qty
                 var pnl = 0.0
                 var i = 0
-                
+
                 while remaining > 0 && i < lots.count {
                     let matched = min(remaining, lots[i].qty)
-                    
-                    // Calculate PnL based on position direction
+
                     if lots[i].price > 0 {
-                        // Closing long position: PnL = (sell price - buy price) × qty
                         pnl += matched * (price - lots[i].price)
                     } else {
-                        // Closing short position: PnL = (sell price - buy price) × qty
-                        // lots[i].price is negative (short entry), so we use abs() to get the actual price
                         pnl += matched * (abs(lots[i].price) - price)
                     }
-                    
+
                     remaining -= matched
-                    
+
                     if lots[i].qty > matched {
                         lots[i].qty -= matched
                         i += 1
@@ -302,17 +355,16 @@ public struct Order: Codable, Identifiable, Hashable, Equatable {
                         lots.remove(at: i)
                     }
                 }
-                
+
                 if isTarget { return pnl }
-                
-                // If there's remaining quantity, it opens a new position in opposite direction
+
                 if remaining > 0 {
-                    let signedPrice = order.side == .buy ? price : -price
+                    let signedPrice = event.side == .buy ? price : -price
                     lots.append((remaining, signedPrice))
                 }
             }
         }
-        
+
         return nil
     }
     
