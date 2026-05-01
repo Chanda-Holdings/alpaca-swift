@@ -18,6 +18,7 @@ public struct Quote: Codable {
         case nyseArca = "NYSEARCA"
         case otc = "OTC"
         case crypto = "CRYPTO"
+        case cbxl = "CBXL"
     }
     
     public enum Feed: String, Codable, CaseIterable {
