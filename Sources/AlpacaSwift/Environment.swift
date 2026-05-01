@@ -13,15 +13,19 @@ public struct Environment: Hashable {
     public let key: String
     public let secret: String
     public let access_token: String
-    
+    /// When true, requests sign with HTTP Basic instead of APCA headers.
+    /// Set by `.broker(...)` (broker URL) and the broker-side data env.
+    /// Defaults to false for backwards compat with existing factories.
+    public var useBasicAuth: Bool = false
+
    public var staticHashValue: String {
-        let combined = "\(api)\(key)\(secret)\(access_token)"
+        let combined = "\(api)\(key)\(secret)\(access_token)\(useBasicAuth)"
         let digest = SHA256.hash(data: combined.data(using: .utf8) ?? Data())
         return digest.map { String(format: "%02hhx", $0) }.joined()
     }
-    
+
     public static func ==(lhs: Environment, rhs: Environment) -> Bool {
-         return lhs.api == rhs.api && lhs.key == rhs.key && lhs.secret == rhs.secret && lhs.access_token == rhs.access_token
+         return lhs.api == rhs.api && lhs.key == rhs.key && lhs.secret == rhs.secret && lhs.access_token == rhs.access_token && lhs.useBasicAuth == rhs.useBasicAuth
      }
     
     public static func data(key: String, secret: String) -> Self {
@@ -47,9 +51,43 @@ public struct Environment: Hashable {
     public static func paper(access_token: String) -> Self {
         Environment(api: "https://paper-api.alpaca.markets/v2", key: "", secret: "",access_token: access_token)
     }
-    
-    public func isPaper() -> Bool {
-        return self.api.contains("paper")
+
+    /// Broker API sub-account. The `accountId` is baked into the base URL
+    /// so existing relative-path endpoint extensions ("positions", "orders",
+    /// "account/portfolio/history", …) target the right sub-account without
+    /// any per-call changes.
+    public static func broker(key: String, secret: String, accountId: String, sandbox: Bool = true) -> Self {
+        let host = sandbox ? "broker-api.sandbox.alpaca.markets" : "broker-api.alpaca.markets"
+        return Environment(
+            api: "https://\(host)/v1/trading/accounts/\(accountId)",
+            key: key,
+            secret: secret,
+            access_token: "",
+            useBasicAuth: true
+        )
     }
-    
+
+    /// Market data endpoint authenticated with broker credentials.
+    /// Sandbox broker creds reach `data.sandbox.alpaca.markets`; live
+    /// broker creds reach `data.alpaca.markets`. Both via HTTP Basic.
+    public static func brokerData(key: String, secret: String, sandbox: Bool = false) -> Self {
+        let host = sandbox ? "data.sandbox.alpaca.markets" : "data.alpaca.markets"
+        return Environment(
+            api: "https://\(host)/v2",
+            key: key,
+            secret: secret,
+            access_token: "",
+            useBasicAuth: true
+        )
+    }
+
+    public func isPaper() -> Bool {
+        // Broker-sandbox accounts are paper accounts by Alpaca convention.
+        return self.api.contains("paper") || self.api.contains("broker-api.sandbox")
+    }
+
+    public func isBroker() -> Bool {
+        return self.api.contains("broker-api")
+    }
+
 }

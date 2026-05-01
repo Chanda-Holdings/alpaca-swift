@@ -150,7 +150,12 @@ extension AlpacaClientProtocol {
         var request = URLRequest(url: url)
         request.httpMethod = method.rawValue
 
-        if self.environment.access_token.isEmpty {
+        if environment.useBasicAuth || environment.isBroker() {
+            // Broker creds — reach broker-api AND data.alpaca.markets via Basic.
+            let token = "\(environment.key):\(environment.secret)"
+            let encoded = Data(token.utf8).base64EncodedString()
+            request.setValue("Basic \(encoded)", forHTTPHeaderField: "Authorization")
+        } else if self.environment.access_token.isEmpty {
             request.setValue(environment.key, forHTTPHeaderField: "APCA-API-KEY-ID")
             request.setValue(environment.secret, forHTTPHeaderField: "APCA-API-SECRET-KEY")
         } else {
