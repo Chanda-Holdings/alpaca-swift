@@ -109,24 +109,24 @@ public struct Contract: Codable, Identifiable {
 
 extension AlpacaClient {
     public func assets(status: Asset.Status? = nil, assetClass: Asset.Class? = nil, exchange: Asset.Exchange? = nil) async throws -> [Asset] {
-        return try await get("assets", searchParams: ["status": status?.rawValue, "asset_class": assetClass?.rawValue, "exchange": exchange?.rawValue])
+        return try await get("assets", accountScoped: false, searchParams: ["status": status?.rawValue, "asset_class": assetClass?.rawValue, "exchange": exchange?.rawValue])
     }
 
     public func asset(id: String) async throws -> Asset {
-        return try await get("assets/\(id)")
+        return try await get("assets/\(id)", accountScoped: false)
     }
 
     public func asset(id: UUID) async throws -> Asset {
-        return try await get("assets/\(id.uuidString)")
+        return try await get("assets/\(id.uuidString)", accountScoped: false)
     }
 
     public func asset(symbol: String) async throws -> Asset {
-        return try await get("assets/\(symbol)")
+        return try await get("assets/\(symbol)", accountScoped: false)
     }
-    
-    
+
+
     public func getOptionContracts(symbols: [String]? = nil, status: Contract.Status? = Contract.Status.active, expirationDate: Date? = nil, expirationDateGTE: Date? = Date.now, expirationDateLTE: Date? = nil, rootSymbol: String? = nil, type: Contract.ContractType? = nil, style: Contract.Style? = nil, strikePriceGTE: Double? = nil, strikePriceLTE: Double? = nil, pageToken: String? = nil, limit: Int? = 10000) async throws -> [Contract] {
-        let contracts:[Contract] = try await get("options/contracts", searchParams: [
+        let contracts:[Contract] = try await get("options/contracts", accountScoped: false, searchParams: [
             "underlying_symbols": symbols?.joined(separator: ","),
             "status": status?.rawValue,
             "expiration_date": expirationDate.map(Utils.iso8601DateOnlyFormatter.string),
@@ -148,7 +148,7 @@ extension AlpacaClient {
     }
     
     public func getOptionContract(symbol_or_asset_id: String) async throws -> Contract {
-        return try await get("options/contracts/\(symbol_or_asset_id)")
+        return try await get("options/contracts/\(symbol_or_asset_id)", accountScoped: false)
     }
     
     

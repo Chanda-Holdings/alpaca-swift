@@ -37,26 +37,15 @@ extension AlpacaClient {
     /// omits the contact sub-object — without it, the email isn't
     /// returned and callers can't disambiguate accounts.
     ///
-    /// Builds its own URL (rooted at `/v1/accounts`, not the per-account
-    /// `/v1/trading/accounts/{aid}` path baked into the broker
-    /// environment) so the existing relative-path endpoint extensions
-    /// don't need any changes to handle this firm-level call.
+    /// Targets the firm-level `/v1/accounts` endpoint by appending to
+    /// `environment.api` (the broker host root, e.g. `https://<host>/v1`),
+    /// bypassing the per-account `accountPathPrefix` used by relative-path
+    /// endpoints.
     public func brokerListAccounts() async throws -> [BrokerAccountListing] {
         guard environment.isBroker() else {
             throw BrokerError.requiresBrokerEnvironment
         }
-        // environment.api is "https://<host>/v1/trading/accounts/<aid>";
-        // strip the per-account suffix to land at "/v1/accounts".
-        guard
-            let baseURL = URL(string: environment.api),
-            var components = URLComponents(
-                url: baseURL.deletingLastPathComponent()
-                    .deletingLastPathComponent()
-                    .deletingLastPathComponent()
-                    .appendingPathComponent("accounts"),
-                resolvingAgainstBaseURL: false
-            )
-        else {
+        guard var components = URLComponents(string: "\(environment.api)/accounts") else {
             throw BrokerError.invalidURL
         }
         components.queryItems = [URLQueryItem(name: "entities", value: "contact")]

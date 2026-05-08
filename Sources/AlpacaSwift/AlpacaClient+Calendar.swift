@@ -23,7 +23,7 @@ extension AlpacaClient {
     }
     
     public func calendar(start: Date? = nil, end: Date? = nil) async throws -> [Calendar] {
-        return try await get("calendar", searchParams: ["start": start.map(Utils.iso8601DateFormatter.string), "end": end.map(Utils.iso8601DateFormatter.string)])
+        return try await get("calendar", accountScoped: false, searchParams: ["start": start.map(Utils.iso8601DateFormatter.string), "end": end.map(Utils.iso8601DateFormatter.string)])
     }
 }
 

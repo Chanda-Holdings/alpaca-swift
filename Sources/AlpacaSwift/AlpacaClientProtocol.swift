@@ -34,70 +34,70 @@ public protocol AlpacaClientProtocol {
 
 extension AlpacaClientProtocol {
     
-    public func get<T>(_ urlPath: String, searchParams: HTTPSearchParams? = nil) async throws -> T where T: Decodable {
-        return try await request(.get, urlPath: urlPath, searchParams: searchParams)
+    public func get<T>(_ urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil) async throws -> T where T: Decodable {
+        return try await request(.get, urlPath: urlPath, accountScoped: accountScoped, searchParams: searchParams)
     }
-    
-    public func delete<T>(_ urlPath: String, searchParams: HTTPSearchParams? = nil) async throws -> T where T: Decodable {
-        return try await request(.delete, urlPath: urlPath, searchParams: searchParams)
+
+    public func delete<T>(_ urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil) async throws -> T where T: Decodable {
+        return try await request(.delete, urlPath: urlPath, accountScoped: accountScoped, searchParams: searchParams)
     }
-    
-    public func delete(_ urlPath: String, searchParams: HTTPSearchParams? = nil) async throws -> Data {
-        return try await request(.delete, urlPath: urlPath, searchParams: searchParams)
+
+    public func delete(_ urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil) async throws -> Data {
+        return try await request(.delete, urlPath: urlPath, accountScoped: accountScoped, searchParams: searchParams)
     }
-    
-    public func post<T>(_ urlPath: String, searchParams: HTTPSearchParams? = nil) async throws -> T where T: Decodable {
-        return try await request(.post, urlPath: urlPath, searchParams: searchParams)
+
+    public func post<T>(_ urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil) async throws -> T where T: Decodable {
+        return try await request(.post, urlPath: urlPath, accountScoped: accountScoped, searchParams: searchParams)
     }
-    
-    public func post<T, V>(_ urlPath: String, searchParams: HTTPSearchParams? = nil, body: V) async throws -> T where T: Decodable, V: Encodable {
-        return try await request(.post, urlPath: urlPath, searchParams: searchParams, body: body)
+
+    public func post<T, V>(_ urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil, body: V) async throws -> T where T: Decodable, V: Encodable {
+        return try await request(.post, urlPath: urlPath, accountScoped: accountScoped, searchParams: searchParams, body: body)
     }
-    
-    public func post<T>(_ urlPath: String, searchParams: HTTPSearchParams? = nil, body: HTTPBodyParams) async throws -> T where T: Decodable {
-        return try await request(.post, urlPath: urlPath, searchParams: searchParams, body: body)
+
+    public func post<T>(_ urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil, body: HTTPBodyParams) async throws -> T where T: Decodable {
+        return try await request(.post, urlPath: urlPath, accountScoped: accountScoped, searchParams: searchParams, body: body)
     }
-    
-    public func put<T>(_ urlPath: String, searchParams: HTTPSearchParams? = nil) async throws -> T where T: Decodable {
-        return try await request(.put, urlPath: urlPath, searchParams: searchParams)
+
+    public func put<T>(_ urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil) async throws -> T where T: Decodable {
+        return try await request(.put, urlPath: urlPath, accountScoped: accountScoped, searchParams: searchParams)
     }
-    
-    public func put<T, V>(_ urlPath: String, searchParams: HTTPSearchParams? = nil, body: V) async throws -> T where T: Decodable, V: Encodable {
-        return try await request(.put, urlPath: urlPath, searchParams: searchParams, body: body)
+
+    public func put<T, V>(_ urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil, body: V) async throws -> T where T: Decodable, V: Encodable {
+        return try await request(.put, urlPath: urlPath, accountScoped: accountScoped, searchParams: searchParams, body: body)
     }
-    
-    public func put<T>(_ urlPath: String, searchParams: HTTPSearchParams? = nil, body: HTTPBodyParams) async throws -> T where T: Decodable {
-        return try await request(.put, urlPath: urlPath, searchParams: searchParams, body: body)
+
+    public func put<T>(_ urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil, body: HTTPBodyParams) async throws -> T where T: Decodable {
+        return try await request(.put, urlPath: urlPath, accountScoped: accountScoped, searchParams: searchParams, body: body)
     }
-    
-    public func patch<T>(_ urlPath: String, searchParams: HTTPSearchParams? = nil) async throws -> T where T: Decodable {
-        return try await request(.patch, urlPath: urlPath, searchParams: searchParams)
+
+    public func patch<T>(_ urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil) async throws -> T where T: Decodable {
+        return try await request(.patch, urlPath: urlPath, accountScoped: accountScoped, searchParams: searchParams)
     }
-    
-    public func patch<T, V>(_ urlPath: String, searchParams: HTTPSearchParams? = nil, body: V) async throws -> T where T: Decodable, V: Encodable {
-        return try await request(.patch, urlPath: urlPath, searchParams: searchParams, body: body)
+
+    public func patch<T, V>(_ urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil, body: V) async throws -> T where T: Decodable, V: Encodable {
+        return try await request(.patch, urlPath: urlPath, accountScoped: accountScoped, searchParams: searchParams, body: body)
     }
-    
-    public func patch<T>(_ urlPath: String, searchParams: HTTPSearchParams? = nil, body: HTTPBodyParams) async throws -> T where T: Decodable {
-        return try await request(.patch, urlPath: urlPath, searchParams: searchParams, body: body)
+
+    public func patch<T>(_ urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil, body: HTTPBodyParams) async throws -> T where T: Decodable {
+        return try await request(.patch, urlPath: urlPath, accountScoped: accountScoped, searchParams: searchParams, body: body)
     }
-    
-    public func request<T>(_ method: HTTPMethod, urlPath: String, searchParams: HTTPSearchParams? = nil) async throws -> T where T: Decodable {
-        return try await request(method, urlPath: urlPath, searchParams: searchParams, httpBody: nil)
+
+    public func request<T>(_ method: HTTPMethod, urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil) async throws -> T where T: Decodable {
+        return try await request(method, urlPath: urlPath, accountScoped: accountScoped, searchParams: searchParams, httpBody: nil)
     }
-    
-    public func request<T, V>(_ method: HTTPMethod, urlPath: String, searchParams: HTTPSearchParams? = nil, body: V) async throws -> T where T: Decodable, V: Encodable {
+
+    public func request<T, V>(_ method: HTTPMethod, urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil, body: V) async throws -> T where T: Decodable, V: Encodable {
         let data = try Utils.jsonEncoder.encode(body)
-        return try await request(method, urlPath: urlPath, searchParams: searchParams, httpBody: data)
+        return try await request(method, urlPath: urlPath, accountScoped: accountScoped, searchParams: searchParams, httpBody: data)
     }
-    
-    public func request<T>(_ method: HTTPMethod, urlPath: String, searchParams: HTTPSearchParams? = nil, body: HTTPBodyParams) async throws -> T where T: Decodable {
+
+    public func request<T>(_ method: HTTPMethod, urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil, body: HTTPBodyParams) async throws -> T where T: Decodable {
         let data = try JSONSerialization.data(withJSONObject: body.compactMapValues { $0 }, options: [])
-        return try await request(method, urlPath: urlPath, searchParams: searchParams, httpBody: data)
+        return try await request(method, urlPath: urlPath, accountScoped: accountScoped, searchParams: searchParams, httpBody: data)
     }
-    
-    private func request<T>(_ method: HTTPMethod, urlPath: String, searchParams: HTTPSearchParams? = nil, httpBody: Data? = nil) async throws -> T where T: Decodable {
-        var data: Data = try await request(method, urlPath: urlPath, searchParams: searchParams, httpBody: httpBody)
+
+    private func request<T>(_ method: HTTPMethod, urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil, httpBody: Data? = nil) async throws -> T where T: Decodable {
+        var data: Data = try await request(method, urlPath: urlPath, accountScoped: accountScoped, searchParams: searchParams, httpBody: httpBody)
         let specialPaths = ["bars":"bars", "quotes":"quotes", "quote":"quote", "trades":"trades", "options/snapshots":"snapshots", "contracts": "option_contracts", "news":"news"]
         for path in specialPaths {
             if urlPath.contains(path.key) {
@@ -121,16 +121,27 @@ extension AlpacaClientProtocol {
             return try Utils.jsonDecoder.decode(T.self, from: data)
         } catch {
             // Debugging error logs
-            print(JSON(data))
+            let json = JSON(data)
+            if json.type == .null {
+                print("Raw response (not valid JSON):")
+                print(String(data: data, encoding: .utf8) ?? "<non-UTF8 data, \(data.count) bytes>")
+            } else {
+                print(json)
+            }
             print(urlPath)
             print(error)
             preconditionFailure()
         }
     }
     
-    private func request(_ method: HTTPMethod, urlPath: String, searchParams: HTTPSearchParams? = nil, httpBody: Data? = nil) async throws -> Data {
+    private func request(_ method: HTTPMethod, urlPath: String, accountScoped: Bool = true, searchParams: HTTPSearchParams? = nil, httpBody: Data? = nil) async throws -> Data {
         // FOR OPTIONS TRADING DATA
-        var fullURL = "\(environment.api)/\(urlPath)"
+        var fullURL: String
+        if accountScoped, let prefix = environment.accountPathPrefix {
+            fullURL = "\(environment.api)/\(prefix)/\(urlPath)"
+        } else {
+            fullURL = "\(environment.api)/\(urlPath)"
+        }
         if (urlPath.contains("options/") || urlPath.contains("news")) && environment.api.contains("data.") {
             if #available(iOS 16.0, *) {
                 fullURL.replace("v2", with: "v1beta1")

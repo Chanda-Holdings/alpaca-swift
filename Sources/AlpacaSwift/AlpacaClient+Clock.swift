@@ -16,6 +16,6 @@ public struct Clock: Codable {
 
 extension AlpacaClient {
     public func clock() async throws -> Clock {
-        return try await get("clock")
+        return try await get("clock", accountScoped: false)
     }
 }
