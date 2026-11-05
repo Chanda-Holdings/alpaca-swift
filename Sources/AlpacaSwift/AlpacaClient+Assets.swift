@@ -31,6 +31,7 @@ public struct Asset: Codable, Identifiable {
         case ftxu = "FTXU"
         case cbse = "CBSE"
         case cbxl = "CBXL"
+        case txse = "TXSE"
         case gnss = "GNSS"
         case otc = "OTC"
         case crypto = "CRYPTO"

@@ -35,6 +35,34 @@ final class AlpacaTests: XCTestCase {
         _ = try await client.asset(symbol: "AAPL")
     }
 
+    func testAssetOnTXSEDecodes() throws {
+        let json = """
+        {
+            "attributes": ["has_options", "overnight_tradable"],
+            "shortable": false,
+            "tradable": true,
+            "id": "09fa9d7c-78d1-4b38-8426-1e5ad4e0c01e",
+            "symbol": "TXS",
+            "name": "Texas Capital Texas Equity Index ETF",
+            "status": "active",
+            "exchange": "TXSE",
+            "fractionable": false,
+            "marginable": true,
+            "easy_to_borrow": false,
+            "class": "us_equity",
+            "maintenance_margin_requirement": 30
+        }
+        """
+
+        let asset = try Utils.jsonDecoder.decode(Asset.self, from: Data(json.utf8))
+
+        XCTAssertEqual(asset.exchange.rawValue, "TXSE")
+    }
+
+    func testQuoteExchangeIncludesTXSE() {
+        XCTAssertNotNil(Quote.Exchange(rawValue: "TXSE"))
+    }
+
     func testClockRequest() async throws {
         _ = try await client.clock()
     }
