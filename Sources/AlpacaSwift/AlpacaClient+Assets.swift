@@ -49,6 +49,7 @@ public struct Asset: Codable, Identifiable {
         case ipo = "ipo"
         case fractionalEhEnabled = "fractional_eh_enabled"
         case hasOptions = "has_options"
+        case hasOptionsExtendedHours = "has_options_extended_hours"
         case optionsLateClose = "options_late_close"
         case overnightTradable = "overnight_tradable"
         case overnightHalted = "overnight_halted"

@@ -59,6 +59,10 @@ final class AlpacaTests: XCTestCase {
         XCTAssertEqual(asset.exchange.rawValue, "TXSE")
     }
 
+    func testAssetAttributeIncludesHasOptionsExtendedHours() {
+        XCTAssertNotNil(Asset.Attribute(rawValue: "has_options_extended_hours"))
+    }
+
     func testQuoteExchangeIncludesTXSE() {
         XCTAssertNotNil(Quote.Exchange(rawValue: "TXSE"))
     }
